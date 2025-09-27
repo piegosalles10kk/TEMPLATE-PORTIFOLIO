@@ -1,5 +1,5 @@
 // src/services/api.js
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:2100';
+const API_URL = process.env.REACT_APP_API_URL || 'DUMMY_API_URL';
 
 export const api = {
     getPortfolio: async () => {
