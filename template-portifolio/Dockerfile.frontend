@@ -6,14 +6,14 @@ WORKDIR /app
 
 # Copia dependências e instala
 COPY package.json ./
+# Copia o lockfile (opcional, se ele existir)
 COPY package-lock.json ./
 RUN npm install
 
 # Copia o código fonte do React
 COPY . .
 
-# Variável Dummy: O React exige que a variável esteja no build.
-# A string 'DUMMY_API_URL' será substituída pelo valor real no runtime.
+# Variável Dummy: A string será substituída pelo valor real no runtime.
 ENV REACT_APP_API_URL=DUMMY_API_URL
 
 # Executa o build de produção (cria a pasta 'build')
@@ -23,7 +23,10 @@ RUN npm run build
 # --- FASE 2: SERVIDOR (NGINX) ---
 FROM nginx:alpine
 
-# Remove o arquivo de configuração padrão
+# Instala ferramentas essenciais, incluindo o dos2unix
+RUN apk add --no-cache bash dos2unix
+
+# Remove a configuração padrão do NGINX
 RUN rm /etc/nginx/conf.d/default.conf
 
 # Copia o build final do React para a pasta do NGINX
@@ -32,6 +35,9 @@ COPY --from=builder /app/build /usr/share/nginx/html
 # Copia a configuração do NGINX e o script de entrada
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 COPY entrypoint.sh /docker-entrypoint.sh
+
+# 🎯 CORREÇÃO DE QUEBRA DE LINHA: Converte o script para formato Unix (LF)
+RUN dos2unix /docker-entrypoint.sh
 
 # Garante permissão de execução ao script
 RUN chmod +x /docker-entrypoint.sh
