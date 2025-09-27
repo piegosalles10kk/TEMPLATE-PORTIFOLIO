@@ -2,6 +2,24 @@
 const API_URL = process.env.REACT_APP_API_URL || 'DUMMY_API_URL';
 
 export const api = {
+    testConnection: async () => {
+        try {
+            const response = await fetch(`${API_URL}/`); // Chama a rota raiz do backend
+            if (response.ok) {
+                console.log(`✅ Conexão com o Backend estabelecida: ${API_URL}`);
+                return true;
+            } else {
+                console.error(`⚠️ Conexão com o Backend falhou (Status: ${response.status}). URL: ${API_URL}`);
+                return false;
+            }
+        } catch (error) {
+            console.error(`❌ Erro de Rede: Não foi possível alcançar o Backend em ${API_URL}`);
+            // O erro mais comum aqui é DNS (backend:2100) ou CORS.
+            console.error("Detalhes do erro:", error.message);
+            return false;
+        }
+    },
+
     getPortfolio: async () => {
         await new Promise(resolve => setTimeout(resolve, 600)); 
         const response = await fetch(`${API_URL}/portifolio`);
