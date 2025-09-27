@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # ------------------------------------------------------------------
+  # 1. FRONTEND (React com NGINX)
+  # ------------------------------------------------------------------
+  frontend:
+    build: 
+      context: ./template-portifolio # Caminho para a pasta do React
+      dockerfile: Dockerfile.frontend # Nome do Dockerfile criado para o React
+    container_name: portifolio_frontend
+    restart: always
+    ports:
+      - "80:80" # Acesso externo na porta 80
+    environment:
+      # 🎯 VARIÁVEL ESSENCIAL: O script entrypoint.sh irá injetar esse valor no build
+      # Usa o nome do serviço do backend (backend) e sua porta interna (2100)
+      REACT_APP_API_URL: http://backend:2100 
+    depends_on:
+      - backend 
+      
+  # ------------------------------------------------------------------
+  # 2. BACKEND (Node.js/Express)
+  # ------------------------------------------------------------------
+  backend:
+    build: 
+      context: ./backend # Caminho para a pasta do Node.js
+      # Assume que o Dockerfile do Backend está dentro de ./backend/Dockerfile
+    container_name: portifolio_backend
+    restart: always
+    ports:
+      - "2100:2100" # Mapeia para acesso externo
+    environment:
+      # Variáveis usadas pelo Node.js para conectar ao Mongo
+      MONGO_USER: adminUser
+      MONGO_PASS: 123456 # 🛑 Mude a senha 🛑
+      PORT: 2100
+    depends_on:
+      - mongo-db 
+
+  # ------------------------------------------------------------------
+  # 3. BANCO DE DADOS (MongoDB 4.4)
+  # ------------------------------------------------------------------
+  mongo-db:
+    image: mongo:4.4 # Versão para evitar problemas de AVX
+    container_name: mongodb_data
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: adminUser
+      MONGO_INITDB_ROOT_PASSWORD: 123456 # 🛑 Mude a senha 🛑
+      MONGO_INITDB_DATABASE: admin
+    volumes:
+      - mongo_data:/data/db
+      # Mapeia o script de inicialização para criar a collection 'projetos'
+      - ./mongo-init:/docker-entrypoint-initdb.d 
+
+volumes:
+  mongo_data:

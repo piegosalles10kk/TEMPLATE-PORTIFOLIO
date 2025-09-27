@@ -1,0 +1,44 @@
+# --- FASE 1: BUILD (Compilação do React) ---
+FROM node:20-alpine AS builder
+
+# Define o diretório de trabalho
+WORKDIR /app
+
+# Copia dependências e instala
+COPY package.json ./
+COPY package-lock.json ./
+RUN npm install
+
+# Copia o código fonte do React
+COPY . .
+
+# Variável Dummy: O React exige que a variável esteja no build.
+# A string 'DUMMY_API_URL' será substituída pelo valor real no runtime.
+ENV REACT_APP_API_URL=DUMMY_API_URL
+
+# Executa o build de produção (cria a pasta 'build')
+RUN npm run build
+
+
+# --- FASE 2: SERVIDOR (NGINX) ---
+FROM nginx:alpine
+
+# Remove o arquivo de configuração padrão
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Copia o build final do React para a pasta do NGINX
+COPY --from=builder /app/build /usr/share/nginx/html
+
+# Copia a configuração do NGINX e o script de entrada
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+COPY entrypoint.sh /docker-entrypoint.sh
+
+# Garante permissão de execução ao script
+RUN chmod +x /docker-entrypoint.sh
+
+# Usa o script para injetar a variável de ambiente antes de iniciar o NGINX
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# Porta padrão do NGINX
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
