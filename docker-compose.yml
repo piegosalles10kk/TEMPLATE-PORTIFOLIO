@@ -8,19 +8,14 @@ services:
     image: mongo:4.4
     container_name: mongodb_data
     restart: always
-    # Não precisa de porta exposta para o host, apenas para o backend
-    # ports:
-    #   - "27017:27017" 
     
     environment:
-      # Credenciais ROOT do MongoDB (use valores seguros!)
       MONGO_INITDB_ROOT_USERNAME: userroot
       MONGO_INITDB_ROOT_PASSWORD: senhasegura
-      # Nome do banco de dados padrão para a aplicação
       MONGO_INITDB_DATABASE: portifolio_db
       
     volumes:
-      # Persistência de dados: Mapeia o volume para manter os dados após o restart
+      # Volume para persistência de dados
       - mongodb_data:/data/db
 
   # ----------------------------------------
@@ -33,43 +28,42 @@ services:
     container_name: portifolio_backend
     restart: always
     
-    # EXPOSIÇÃO DE PORTAS: Acessível via http://localhost:2100 no seu host
+    # Porta exposta para o host (para o navegador chamar via localhost:2100)
     ports:
       - "2100:2100" 
       
     environment:
-      # Variáveis de conexão do backend (Node.js)
-      # Host usa o nome do serviço Docker: mongo-db
+      # URI CORRETA: O host é o nome do serviço Docker Compose: 'mongo-db'
       MONGO_URI: mongodb://userroot:senhasegura@mongo-db:27017/portifolio_db?authSource=admin
       PORT: 2100
 
+    # Adiciona a dependência para garantir que o banco de dados comece a subir primeiro
     depends_on:
-      - mongo-db # Garante que o banco suba primeiro
+      - mongo-db 
 
   # ----------------------------------------
   # 3. SERVIÇO DO FRONTEND (React/Nginx)
   # ----------------------------------------
   frontend:
     build:
-      context: ./template-portifolio # Caminho para a pasta do seu frontend
+      context: ./template-portifolio
       dockerfile: Dockerfile.frontend
     container_name: portifolio_frontend
     restart: always
     
-    # EXPOSIÇÃO DE PORTAS: Acessível via http://localhost no seu host
+    # Porta exposta para o host (http://localhost)
     ports:
       - "80:80" 
       
     environment:
-      # VARIÁVEL CRUCIAL AJUSTADA:
-      # O navegador (no host) acessa o backend via localhost e a porta exposta (2100)
+      # A URL que o navegador (no seu PC) usa para acessar o backend
       REACT_APP_API_URL: http://localhost:2100
       
     depends_on:
-      - backend # Garante que o backend suba primeiro
+      - backend
 
 # ----------------------------------------
-# VOLUMES (Para persistência do MongoDB)
+# VOLUMES
 # ----------------------------------------
 volumes:
   mongodb_data:
