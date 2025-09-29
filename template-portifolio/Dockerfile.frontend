@@ -46,5 +46,5 @@ RUN chmod +x /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
 # Porta padrão do NGINX
-EXPOSE 80
+EXPOSE 500
 CMD ["nginx", "-g", "daemon off;"]
