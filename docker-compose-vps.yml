@@ -53,7 +53,7 @@ services:
     
     # Porta exposta para o host (http://localhost)
     ports:
-      - "80:80" 
+      - "500:500" 
       
     environment:
       # A URL que o navegador (no seu PC) usa para acessar o backend
