@@ -1,50 +1,23 @@
-# --- FASE 1: BUILD (Compilação do React) ---
-FROM node:20-alpine AS builder
+# Dockerfile alternativo - React rodando diretamente na porta 500
+FROM node:20-alpine
 
 # Define o diretório de trabalho
 WORKDIR /app
 
 # Copia dependências e instala
 COPY package.json ./
-# Copia o lockfile (opcional, se ele existir)
 COPY package-lock.json ./
 RUN npm install
 
 # Copia o código fonte do React
 COPY . .
 
-# Variável Dummy: A string será substituída pelo valor real no runtime.
-ENV REACT_APP_API_URL=DUMMY_API_URL
+# Define as variáveis de ambiente
+ENV PORT=500
+ENV REACT_APP_API_URL=http://localhost:2100
 
-# Executa o build de produção (cria a pasta 'build')
-RUN npm run build
-
-
-# --- FASE 2: SERVIDOR (NGINX) ---
-FROM nginx:alpine
-
-# Instala ferramentas essenciais, incluindo o dos2unix
-RUN apk add --no-cache bash dos2unix
-
-# Remove a configuração padrão do NGINX
-RUN rm /etc/nginx/conf.d/default.conf
-
-# Copia o build final do React para a pasta do NGINX
-COPY --from=builder /app/build /usr/share/nginx/html
-
-# Copia a configuração do NGINX e o script de entrada
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY entrypoint.sh /docker-entrypoint.sh
-
-# 🎯 CORREÇÃO DE QUEBRA DE LINHA: Converte o script para formato Unix (LF)
-RUN dos2unix /docker-entrypoint.sh
-
-# Garante permissão de execução ao script
-RUN chmod +x /docker-entrypoint.sh
-
-# Usa o script para injetar a variável de ambiente antes de iniciar o NGINX
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
-# Porta padrão do NGINX
+# Expõe a porta 500
 EXPOSE 500
-CMD ["nginx", "-g", "daemon off;"]
+
+# Roda o React em modo desenvolvimento na porta 500
+CMD ["npm", "start"]
