@@ -1,5 +1,5 @@
 // src/services/api.js
-const API_URL = process.env.REACT_APP_API_URL || 'DUMMY_API_URL';
+const API_URL = process.env.REACT_APP_API_URL || 'http://piegosalles-backend.cloud/backend-portifolio'; // URL do backend
 
 export const api = {
     testConnection: async () => {
